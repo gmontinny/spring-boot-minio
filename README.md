@@ -36,7 +36,7 @@
 ```
     127.0.0.1:9001
 ```
-<b>4 )</b> Entre username e password 
+<b>4 )</b> Logar no MINIO 
 ```
     username : minioadmin
     password : minioadmin
