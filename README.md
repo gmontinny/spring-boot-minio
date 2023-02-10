@@ -164,7 +164,7 @@
    http://localhost:8085/minio/removeBucket/test1
 ```
 
-##### <a id="objectInformation">Liste os nomes dos objetos e seu URL de download no Bucket -> http://localhost:8085/minio/showListObjectNameAndDownloadUrl/{bucketName}</a>
+##### <a id="objectInformation"> Liste os nomes dos objetos no Bucket -> http://localhost:8085/minio/showListObjectNameAndDownloadUrl/{bucketName}</a>
 ```
    http://localhost:8085/minio/removeBucket/test1
 ```
