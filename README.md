@@ -2,7 +2,7 @@
 
 <img src="screenshots/springboot_minio.png" alt="Main Information" width="800" height="300">
 
-### 📖 Information
+### 📖 Informação
 
 <ul style="list-style-type:disc">
 <li>MinIO é o único conjunto de armazenamento de objetos disponível em
