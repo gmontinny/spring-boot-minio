@@ -115,7 +115,7 @@
   </tr>
 </table>
 
-### Used Dependencies
+### Dependências Usadas
 * Spring Boot Web
 * Minio
 * Lombok
