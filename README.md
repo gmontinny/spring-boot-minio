@@ -144,37 +144,37 @@
 
 ## Parâmetros de solicitação válidos
 
-##### <a id="addBucketName">Add Bucket Name -> http://localhost:8085/minio/addBucket/{bucketName}</a>
+##### <a id="addBucketName">Adicionar nome do Bucket  -> http://localhost:8085/minio/addBucket/{bucketName}</a>
 ```
    http://localhost:8085/minio/addBucket/test1
 ```
 
-##### <a id="showBucketName">Show Bucket Name -> http://localhost:8085/minio/show/{bucketName}</a>
+##### <a id="showBucketName">Exibir nome do Bucket -> http://localhost:8085/minio/show/{bucketName}</a>
 ```
    http://localhost:8085/minio/show/commons
 ```
 
-##### <a id="showAllBucketName">Show All Bucket Names -> http://localhost:8085/minio/showBucketName</a>
+##### <a id="showAllBucketName">Mostrar todos os Bucket -> http://localhost:8085/minio/showBucketName</a>
 ```
    http://localhost:8085/minio/showBucketName
 ```
 
-##### <a id="deleteBucketName">Delete Bucket Name -> http://localhost:8085/minio/removeBucket/{bucketName}</a>
+##### <a id="deleteBucketName">Excluir Bucket por nome -> http://localhost:8085/minio/removeBucket/{bucketName}</a>
 ```
    http://localhost:8085/minio/removeBucket/test1
 ```
 
-##### <a id="objectInformation">List Object Information -> http://localhost:8085/minio/showListObjectNameAndDownloadUrl/{bucketName}</a>
+##### <a id="objectInformation">Liste os nomes dos objetos e seu URL de download no Bucket -> http://localhost:8085/minio/showListObjectNameAndDownloadUrl/{bucketName}</a>
 ```
    http://localhost:8085/minio/removeBucket/test1
 ```
 
-##### <a id="download">Download File -> http://localhost:8085/minio/download/{bucketName}/{objectName}</a>
+##### <a id="download">Download do Arquivo -> http://localhost:8085/minio/download/{bucketName}/{objectName}</a>
 ```
    http://localhost:8085/minio/download/commons/ad94ff2e9b404772a1f9b98f4e11b4f9.PNG
 ```
 
-##### <a id="deleteObject">Delete File from Bucket Name -> http://localhost:8085/minio/removeObject/{bucketName}/{objectName}</a>
+##### <a id="deleteObject">Excluir objeto definido no nome do Bucket-> http://localhost:8085/minio/removeObject/{bucketName}/{objectName}</a>
 ```
    http://localhost:8085/minio/removeObject/commons/a2d203e188f94ccb8393e688deaf216a.jpg
 ```
