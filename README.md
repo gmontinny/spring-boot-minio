@@ -134,7 +134,7 @@
     bucketname : commons
 ```
 
-##### <a id="deleteListObject">Delete List Object-> http://localhost:8085/minio/removeListObject/{bucketName}</a>
+##### <a id="deleteListObject">Excluir uma lista de Objeto-> http://localhost:8085/minio/removeListObject/{bucketName}</a>
 ```
    [
        "de43ab54e89f4879a2baf87df1570f56.PNG",
