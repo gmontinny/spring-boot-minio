@@ -118,7 +118,7 @@
        <td>/showURL/{bucketName}/{objectName}</td>
        <td>Exibe URL objeto em BucketName do Minio</td>
        <td></td>
-       <td><a href="README.md#showURL">Info</a></td>
+       <td><a href="#showURL">Info</a></td>
   </tr>
 </table>
 
