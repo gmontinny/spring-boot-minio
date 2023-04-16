@@ -19,6 +19,7 @@
          <li>Implementar o processo de exclusão de bucketname do Minio</li>
          <li>Implemente o processo de exclusão da lista de arquivos do bucketname do Minio</li>
          <li>Implementar o processo de exclusão de arquivo do bucketname do Minio</li>
+         <li>Implementar o processo URL do objeto armazenado do bucketname do Minio</li>
        </ul>
    </li>
 </ul>
