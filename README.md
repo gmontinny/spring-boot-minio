@@ -113,6 +113,13 @@
        <td></td>
        <td><a href="README.md#download">Info</a></td>
   </tr>
+  <tr>
+       <td>GET</td>
+       <td>/showURL/{bucketName}/{objectName}</td>
+       <td>Exibe URL objeto em BucketName do Minio</td>
+       <td></td>
+       <td><a href="README.md#showURL">Info</a></td>
+  </tr>
 </table>
 
 ### Dependências Usadas
