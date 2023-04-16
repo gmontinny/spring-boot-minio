@@ -5,7 +5,7 @@
     <parent>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-starter-parent</artifactId>
-        <version>2.6.2</version>
+        <version>2.7.10</version>
         <relativePath/> <!-- lookup parent from repository -->
     </parent>
     <groupId>com.springminio</groupId>
@@ -15,13 +15,14 @@
     <description>Spring Boot with Minio</description>
     <properties>
         <java.version>17</java.version>
-        <minio.version>8.2.1</minio.version>
-        <hutool.version>5.6.5</hutool.version>
+        <minio.version>8.5.2</minio.version>
+        <hutool.version>5.8.17</hutool.version>
         <aspectjweaver.version>1.9.7</aspectjweaver.version>
         <swagger2.version>3.0.0</swagger2.version>
         <swagger.ui.version>2.9.2</swagger.ui.version>
     </properties>
     <dependencies>
+
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-web</artifactId>
