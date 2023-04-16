@@ -166,7 +166,7 @@
 
 ##### <a id="objectInformation"> Liste os nomes dos objetos no Bucket -> http://localhost:8085/minio/showListObjectNameAndDownloadUrl/{bucketName}</a>
 ```
-   http://localhost:8085/minio/removeBucket/test1
+   http://localhost:8085/minio/showListObjectNameAndDownloadUrl/test1
 ```
 
 ##### <a id="download">Download do Arquivo -> http://localhost:8085/minio/download/{bucketName}/{objectName}</a>
