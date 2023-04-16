@@ -28,7 +28,7 @@
 
 <b>1 )</b> Instale o <b>Docker Desktop</b>. Aqui está o <b>link</b> de instalação: https://docs.docker.com/docker-for-windows/install/
 
-<b>2 )</b> Abra o <b>Terminal</b> na pasta <b>resources</b> para executar o <b>Minio</b> no contêiner <b>Docker</b>
+<b>2 )</b> Abra o <b>Terminal</b> para executar o <b>Minio</b> no contêiner <b>Docker</b>
 
 ```
     docker-compose up -d
