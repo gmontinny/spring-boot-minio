@@ -61,6 +61,13 @@ public class MinioController {
         return "Bucket name "+ bucketName +" created";
     }
 
+    @GetMapping("/showURL/{bucketName}/{objectName}")
+    public String addBucket(@PathVariable String bucketName,
+                            @PathVariable String objectName) {
+
+        return minioService.getObjectUrl(bucketName,objectName);
+    }
+
     @GetMapping("/show/{bucketName}")
     public List<String> show(@PathVariable String bucketName) {
 

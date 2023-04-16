@@ -179,4 +179,9 @@
    http://localhost:8085/minio/removeObject/commons/a2d203e188f94ccb8393e688deaf216a.jpg
 ```
 
+##### <a id="showURL">Exibe URL do Objeto armazenado-> http://localhost:8085/minio/showURL/{bucketName}/{objectName}</a>
+```
+   http://localhost:8085/minio/showURL/commons/a2d203e188f94ccb8393e688deaf216a.jpg
+```
+
 
