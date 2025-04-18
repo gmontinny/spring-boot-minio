@@ -2,8 +2,10 @@ package com.springminio.app.exception.error;
 
 import com.springminio.app.exception.ApiError;
 import com.springminio.app.exception.FileResponseException;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.web.HttpMediaTypeNotSupportedException;
@@ -15,100 +17,135 @@ import org.springframework.web.context.request.WebRequest;
 import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExceptionHandler;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
+@Slf4j
 @ControllerAdvice
 public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
 
-    // handleHttpMediaTypeNotSupported : triggers when the JSON is invalid
     @Override
     protected ResponseEntity<Object> handleHttpMediaTypeNotSupported(
             HttpMediaTypeNotSupportedException ex,
             HttpHeaders headers,
-            HttpStatus status,
+            HttpStatusCode status,
             WebRequest request) {
-
-        List<String> details = new ArrayList<String>();
-
 
         StringBuilder builder = new StringBuilder();
         builder.append(ex.getContentType());
-        builder.append(" media type is not supported. Supported media types are ");
+        builder.append(" media type não é suportado. Tipos de mídia suportados são ");
         ex.getSupportedMediaTypes().forEach(t -> builder.append(t).append(", "));
 
-        details.add(builder.toString());
+        List<String> details = List.of(builder.toString());
 
-        ApiError err = new ApiError(HttpStatus.BAD_REQUEST.value(), HttpStatus.BAD_REQUEST, LocalDateTime.now() ,
-                "Invalid JSON", details);
+        ApiError err = new ApiError(
+                HttpStatus.UNSUPPORTED_MEDIA_TYPE.value(),
+                HttpStatus.UNSUPPORTED_MEDIA_TYPE,
+                LocalDateTime.now(),
+                "Tipo de mídia inválido",
+                details
+        );
 
-        return ResponseEntity.status(status).body(err);
-
+        log.error("Erro de tipo de mídia não suportado: {}", builder);
+        return ResponseEntity.status(HttpStatus.UNSUPPORTED_MEDIA_TYPE).body(err);
     }
 
-    // handleHttpMessageNotReadable : triggers when the JSON is malformed
     @Override
-    protected ResponseEntity<Object> handleHttpMessageNotReadable(HttpMessageNotReadableException ex,
-                                                                  HttpHeaders headers, HttpStatus status,
-                                                                  WebRequest request) {
+    protected ResponseEntity<Object> handleHttpMessageNotReadable(
+            HttpMessageNotReadableException ex,
+            HttpHeaders headers,
+            HttpStatusCode status,
+            WebRequest request) {
 
-        List<String> details = new ArrayList<String>();
-        details.add(ex.getMessage());
+        List<String> details = List.of(ex.getMessage());
 
-        ApiError err = new ApiError(HttpStatus.BAD_REQUEST.value(), HttpStatus.BAD_REQUEST, LocalDateTime.now() ,
-                "Malformed JSON request", details);
+        ApiError err = new ApiError(
+                HttpStatus.BAD_REQUEST.value(),
+                HttpStatus.BAD_REQUEST,
+                LocalDateTime.now(),
+                "Requisição JSON malformada",
+                details
+        );
 
-
-        return ResponseEntity.status(status).body(err);
+        log.error("Erro de JSON malformado: {}", ex.getMessage());
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(err);
     }
 
-    // handleMethodArgumentNotValid : triggers when @Valid fails
     @Override
-    protected ResponseEntity<Object> handleMethodArgumentNotValid(MethodArgumentNotValidException ex,
-                                                                  HttpHeaders headers, HttpStatus status,
-                                                                  WebRequest request) {
+    protected ResponseEntity<Object> handleMethodArgumentNotValid(
+            MethodArgumentNotValidException ex,
+            HttpHeaders headers,
+            HttpStatusCode status,
+            WebRequest request) {
 
-        List<String> details = new ArrayList<String>();
-        details = ex.getBindingResult()
+        List<String> details = ex.getBindingResult()
                 .getFieldErrors()
                 .stream()
-                .map(error -> error.getObjectName() + " : " + error.getDefaultMessage())
+                .map(error -> error.getField() + ": " + error.getDefaultMessage())
                 .collect(Collectors.toList());
 
+        ApiError err = new ApiError(
+                HttpStatus.BAD_REQUEST.value(),
+                HttpStatus.BAD_REQUEST,
+                LocalDateTime.now(),
+                "Erros de validação",
+                details
+        );
 
-        ApiError err = new ApiError(HttpStatus.BAD_REQUEST.value(), HttpStatus.BAD_REQUEST, LocalDateTime.now() ,
-                "Validation Errors", details);
-
-        return ResponseEntity.status(status).body(err);
+        log.error("Erros de validação: {}", details);
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(err);
     }
 
-    // handleMissingServletRequestParameter : triggers when there are missing parameters
     @Override
     protected ResponseEntity<Object> handleMissingServletRequestParameter(
-            MissingServletRequestParameterException ex, HttpHeaders headers,
-            HttpStatus status, WebRequest request) {
+            MissingServletRequestParameterException ex,
+            HttpHeaders headers,
+            HttpStatusCode status,
+            WebRequest request) {
 
-        List<String> details = new ArrayList<String>();
-        details.add(ex.getParameterName() + " parameter is missing");
+        List<String> details = List.of(String.format("Parâmetro %s está faltando", ex.getParameterName()));
 
-        ApiError err = new ApiError(HttpStatus.BAD_REQUEST.value(), HttpStatus.BAD_REQUEST, LocalDateTime.now() ,
-                "Missing Parameters", details);
+        ApiError err = new ApiError(
+                HttpStatus.BAD_REQUEST.value(),
+                HttpStatus.BAD_REQUEST,
+                LocalDateTime.now(),
+                "Parâmetros ausentes",
+                details
+        );
 
-        return ResponseEntity.status(status).body(err);
+        log.error("Parâmetro ausente: {}", ex.getParameterName());
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(err);
     }
 
-    // handleCategoryNotFoundException : triggers when there is not resource with the specified ID in Category
     @ExceptionHandler(FileResponseException.class)
-    public ResponseEntity<Object> handleFileResponseNotFoundException(FileResponseException ex) {
+    public ResponseEntity<Object> handleFileResponseException(FileResponseException ex) {
+        List<String> details = List.of(ex.getMessage());
 
-        List<String> details = new ArrayList<String>();
-        details.add(ex.getMessage());
+        ApiError err = new ApiError(
+                HttpStatus.NOT_FOUND.value(),
+                HttpStatus.NOT_FOUND,
+                LocalDateTime.now(),
+                "Erro no processamento do arquivo",
+                details
+        );
 
-        ApiError err = new ApiError(HttpStatus.BAD_REQUEST.value(), HttpStatus.BAD_REQUEST, LocalDateTime.now() ,
-                "FileResponseException", details);
-
+        log.error("Erro no processamento do arquivo: {}", ex.getMessage());
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(err);
     }
 
+    @ExceptionHandler(Exception.class)
+    public ResponseEntity<Object> handleGenericException(Exception ex) {
+        List<String> details = List.of(ex.getMessage());
+
+        ApiError err = new ApiError(
+                HttpStatus.INTERNAL_SERVER_ERROR.value(),
+                HttpStatus.INTERNAL_SERVER_ERROR,
+                LocalDateTime.now(),
+                "Erro interno do servidor",
+                details
+        );
+
+        log.error("Erro interno do servidor: {}", ex.getMessage(), ex);
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(err);
+    }
 }

@@ -4,6 +4,11 @@ import com.springminio.app.exception.FileResponseException;
 import com.springminio.app.payload.FileResponse;
 import com.springminio.app.service.MinioService;
 import com.springminio.app.util.FileTypeUtils;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.apache.tomcat.util.http.fileupload.IOUtils;
 import org.slf4j.Logger;
@@ -12,7 +17,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
-import javax.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
@@ -24,31 +29,38 @@ import java.util.Map;
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/minio")
+@Tag(name = "Minio Controller", description = "API para gerenciamento de arquivos no MinIO")
 public class MinioController {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(MinioController.class);
-
     private final MinioService minioService;
+    private static final String DELETE_SUCCESS = "Operação de deleção realizada com sucesso";
+    private static final String DELETE_FAILED = "Falha na operação de deleção";
+
 
     @Value("${server.port}")
     private int portNumber;
 
     @PostMapping("/upload")
-    public FileResponse uploadFile(MultipartFile file, String bucketName) {
+    @Operation(summary = "Upload de arquivo", description = "Realiza o upload de um arquivo para um bucket específico")
+    public FileResponse uploadFile(
+            @Parameter(description = "Arquivo a ser enviado") @RequestParam("file") MultipartFile file,
+            @Parameter(description = "Nome do bucket") @RequestParam String bucketName) {
 
-        LOGGER.info("MinioController | uploadFile is called");
+        LOGGER.info("MinioController | uploadFile | bucketName : {}", bucketName);
 
-        LOGGER.info("MinioController | uploadFile | bucketName : " + bucketName);
+        if (file.isEmpty()) {
+            throw new FileResponseException("Arquivo não pode estar vazio");
+        }
 
         String fileType = FileTypeUtils.getFileType(file);
-
-        LOGGER.info("MinioController | uploadFile | fileType : " + fileType);
-
-        if (fileType != null) {
-            return minioService.putObject(file, bucketName, fileType);
+        if (fileType == null) {
+            throw new FileResponseException("Tipo de arquivo não suportado");
         }
-        throw new FileResponseException("File cannot be Upload");
+
+        return minioService.putObject(file, bucketName, fileType);
     }
+
 
     @PostMapping("/addBucket/{bucketName}")
     public String addBucket(@PathVariable String bucketName) {
@@ -62,11 +74,15 @@ public class MinioController {
     }
 
     @GetMapping("/showURL/{bucketName}/{objectName}")
-    public String addBucket(@PathVariable String bucketName,
-                            @PathVariable String objectName) {
+    @Operation(summary = "Obter URL do objeto", description = "Retorna a URL de acesso para um objeto específico no bucket")
+    public String showObjectUrl(
+            @Parameter(description = "Nome do bucket") @PathVariable String bucketName,
+            @Parameter(description = "Nome do objeto") @PathVariable String objectName) {
 
-        return minioService.getObjectUrl(bucketName,objectName);
+        LOGGER.info("MinioController | showObjectUrl is called");
+        return minioService.getObjectUrl(bucketName, objectName);
     }
+
 
     @GetMapping("/show/{bucketName}")
     public List<String> show(@PathVariable String bucketName) {
@@ -87,22 +103,16 @@ public class MinioController {
     }
 
     @DeleteMapping("/removeBucket/{bucketName}")
-    public String delBucketName(@PathVariable String bucketName) {
-
-        LOGGER.info("MinioController | delBucketName is called");
-
-        LOGGER.info("MinioController | delBucketName | bucketName : " + bucketName);
-
-        boolean state =  minioService.removeBucket(bucketName);
-
-        LOGGER.info("MinioController | delBucketName | state : " + state);
-
-        if(state){
-            return " Delete Bucket Name successfully ";
-        }else{
-            return " Delete failed ";
-        }
+    @Operation(summary = "Remover bucket", description = "Remove um bucket específico")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Bucket removido com sucesso"),
+            @ApiResponse(responseCode = "400", description = "Falha ao remover bucket")
+    })
+    public String delBucketName(@Parameter(description = "Nome do bucket") @PathVariable String bucketName) {
+        LOGGER.info("MinioController | delBucketName | bucketName : {}", bucketName);
+        return minioService.removeBucket(bucketName) ? DELETE_SUCCESS : DELETE_FAILED;
     }
+
 
     @DeleteMapping("/removeObject/{bucketName}/{objectName}")
     public String delObject(@PathVariable("bucketName") String bucketName, @PathVariable("objectName") String objectName) {
@@ -167,34 +177,27 @@ public class MinioController {
     }
 
     @GetMapping("/download/{bucketName}/{objectName}")
-    public void download(HttpServletResponse response, @PathVariable("bucketName") String bucketName,
-                         @PathVariable("objectName") String objectName) {
+    @Operation(summary = "Download de objeto", description = "Realiza o download de um objeto específico do bucket")
+    public void download(
+            HttpServletResponse response,
+            @Parameter(description = "Nome do bucket") @PathVariable String bucketName,
+            @Parameter(description = "Nome do objeto") @PathVariable String objectName) {
 
         LOGGER.info("MinioController | download is called");
-        LOGGER.info("MinioController | download | bucketName : " + bucketName);
-        LOGGER.info("MinioController | download | objectName : " + objectName);
+        LOGGER.info("MinioController | download | bucketName : {}", bucketName);
+        LOGGER.info("MinioController | download | objectName : {}", objectName);
 
-        InputStream in = null;
-        try {
-            in = minioService.downloadObject(bucketName, objectName);
+        try (InputStream in = minioService.downloadObject(bucketName, objectName)) {
             response.setHeader("Content-Disposition", "attachment;filename="
                     + URLEncoder.encode(objectName, "UTF-8"));
             response.setCharacterEncoding("UTF-8");
-            // Remove bytes from InputStream Copied to the OutputStream .
             IOUtils.copy(in, response.getOutputStream());
         } catch (UnsupportedEncodingException e) {
-            LOGGER.info("MinioController | download | UnsupportedEncodingException : " + e.getMessage());
+            LOGGER.error("Erro de codificação ao fazer download do arquivo: {}", e.getMessage(), e);
+            throw new FileResponseException("Erro ao processar nome do arquivo");
         } catch (IOException e) {
-            LOGGER.info("MinioController | download | IOException : " + e.getMessage());
-        } finally {
-            if (in != null) {
-                try {
-                    in.close();
-                } catch (IOException e) {
-                    LOGGER.info("MinioController | download | IOException : " + e.getMessage());
-                }
-            }
+            LOGGER.error("Erro de I/O ao fazer download do arquivo: {}", e.getMessage(), e);
+            throw new FileResponseException("Erro ao fazer download do arquivo");
         }
-
     }
 }
