@@ -42,7 +42,7 @@
     username : minioadmin
     password : minioadmin
 ```
-<b>5 )</b> Explore Rest APIs
+<b>5 )</b> Rest APIs
 <table style="width:100%">
   <tr>
     <th>Method</th>
