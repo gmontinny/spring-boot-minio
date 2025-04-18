@@ -25,6 +25,7 @@ import java.net.URLEncoder;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 @RestController
 @RequiredArgsConstructor
@@ -49,29 +50,34 @@ public class MinioController {
 
         LOGGER.info("MinioController | uploadFile | bucketName : {}", bucketName);
 
-        if (file.isEmpty()) {
-            throw new FileResponseException("Arquivo não pode estar vazio");
-        }
-
-        String fileType = FileTypeUtils.getFileType(file);
-        if (fileType == null) {
-            throw new FileResponseException("Tipo de arquivo não suportado");
-        }
-
-        return minioService.putObject(file, bucketName, fileType);
+        return Optional.ofNullable(file)
+                .filter(f -> !f.isEmpty())
+                .map(f -> {
+                    String fileType = Optional.ofNullable(FileTypeUtils.getFileType(f))
+                            .orElseThrow(() -> new FileResponseException("Tipo de arquivo não suportado"));
+                    return minioService.putObject(f, bucketName, fileType);
+                })
+                .orElseThrow(() -> new FileResponseException("Arquivo não pode estar vazio"));
     }
 
 
+
     @PostMapping("/addBucket/{bucketName}")
-    public String addBucket(@PathVariable String bucketName) {
+    @Operation(summary = "Criar novo bucket", description = "Cria um novo bucket no MinIO com o nome especificado")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Bucket criado com sucesso"),
+            @ApiResponse(responseCode = "400", description = "Falha ao criar o bucket")
+    })
+    public String addBucket(
+            @Parameter(description = "Nome do bucket a ser criado") @PathVariable String bucketName) {
 
         LOGGER.info("MinioController | addBucket is called");
-
         LOGGER.info("MinioController | addBucket | bucketName : " + bucketName);
 
         minioService.makeBucket(bucketName);
         return "Bucket name "+ bucketName +" created";
     }
+
 
     @GetMapping("/showURL/{bucketName}/{objectName}")
     @Operation(summary = "Obter URL do objeto", description = "Retorna a URL de acesso para um objeto específico no bucket")
@@ -85,22 +91,28 @@ public class MinioController {
 
 
     @GetMapping("/show/{bucketName}")
-    public List<String> show(@PathVariable String bucketName) {
-
+    @Operation(summary = "Listar objetos do bucket", description = "Lista todos os objetos contidos em um bucket específico")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Lista de objetos retornada com sucesso"),
+            @ApiResponse(responseCode = "404", description = "Bucket não encontrado")
+    })
+    public List<String> show(
+            @Parameter(description = "Nome do bucket para listar os objetos") @PathVariable String bucketName) {
         LOGGER.info("MinioController | show is called");
-
         LOGGER.info("MinioController | show | bucketName : " + bucketName);
-
         return minioService.listObjectNames(bucketName);
     }
 
     @GetMapping("/showBucketName")
+    @Operation(summary = "Listar buckets", description = "Lista todos os buckets disponíveis no MinIO")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Lista de buckets retornada com sucesso")
+    })
     public List<String> showBucketName() {
-
         LOGGER.info("MinioController | showBucketName is called");
-
         return minioService.listBucketName();
     }
+
 
     @DeleteMapping("/removeBucket/{bucketName}")
     @Operation(summary = "Remover bucket", description = "Remove um bucket específico")
@@ -115,66 +127,70 @@ public class MinioController {
 
 
     @DeleteMapping("/removeObject/{bucketName}/{objectName}")
-    public String delObject(@PathVariable("bucketName") String bucketName, @PathVariable("objectName") String objectName) {
+    @Operation(summary = "Remover objeto", description = "Remove um objeto específico de um bucket")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Objeto removido com sucesso"),
+            @ApiResponse(responseCode = "400", description = "Falha ao remover objeto")
+    })
+    public String delObject(
+            @Parameter(description = "Nome do bucket") @PathVariable("bucketName") String bucketName,
+            @Parameter(description = "Nome do objeto") @PathVariable("objectName") String objectName) {
 
-        LOGGER.info("MinioController | delObject is called");
+        LOGGER.info("MinioController | delObject | bucketName: {}, objectName: {}", bucketName, objectName);
 
-        LOGGER.info("MinioController | delObject | bucketName : " + bucketName);
-        LOGGER.info("MinioController | delObject | objectName : " + objectName);
-
-        boolean state =  minioService.removeObject(bucketName, objectName);
-
-        LOGGER.info("MinioController | delBucketName | state : " + state);
-
-        if(state){
-            return " Delete Object successfully ";
-        }else {
-            return " Delete failed ";
-        }
+        return Optional.of(minioService.removeObject(bucketName, objectName))
+                .map(success -> success ? DELETE_SUCCESS : DELETE_FAILED)
+                .orElse(DELETE_FAILED);
     }
+
 
     @DeleteMapping("/removeListObject/{bucketName}")
-    public String delListObject(@PathVariable("bucketName") String bucketName, @RequestBody List<String> objectNameList) {
+    @Operation(summary = "Remover lista de objetos", description = "Remove múltiplos objetos de um bucket específico")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Objetos removidos com sucesso"),
+            @ApiResponse(responseCode = "400", description = "Falha ao remover objetos")
+    })
+    public String delListObject(
+            @Parameter(description = "Nome do bucket") @PathVariable("bucketName") String bucketName,
+            @Parameter(description = "Lista de nomes dos objetos a serem removidos") @RequestBody List<String> objectNameList) {
 
-        LOGGER.info("MinioController | delListObject is called");
+        LOGGER.info("MinioController | delListObject | bucketName: {}, quantidade de objetos: {}",
+                bucketName, objectNameList.size());
 
-        LOGGER.info("MinioController | delListObject | bucketName : " + bucketName);
-        LOGGER.info("MinioController | delListObject | objectNameList size : " + objectNameList.size());
-
-        boolean state =  minioService.removeListObject(bucketName, objectNameList) ;
-
-        LOGGER.info("MinioController | delBucketName | state : " + state);
-
-        if(state){
-            return " Delete List Object successfully ";
-        }else {
-            return " Delete failed ";
-        }
+        return Optional.of(objectNameList)
+                .filter(list -> !list.isEmpty())
+                .map(list -> minioService.removeListObject(bucketName, list))
+                .map(success -> success ? DELETE_SUCCESS : DELETE_FAILED)
+                .orElse(DELETE_FAILED);
     }
+
 
     @GetMapping("/showListObjectNameAndDownloadUrl/{bucketName}")
-    public Map<String, String> showListObjectNameAndDownloadUrl(@PathVariable String bucketName) {
+    @Operation(summary = "Listar objetos com URLs de download",
+            description = "Retorna um mapa com os nomes dos objetos e suas respectivas URLs de download")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200",
+                    description = "Mapa de objetos e URLs retornado com sucesso"),
+            @ApiResponse(responseCode = "404",
+                    description = "Bucket não encontrado"),
+            @ApiResponse(responseCode = "500",
+                    description = "Erro interno ao processar a requisição")
+    })
+    public Map<String, String> showListObjectNameAndDownloadUrl(
+            @Parameter(description = "Nome do bucket para listar os objetos")
+            @PathVariable String bucketName) {
 
-        LOGGER.info("MinioController | showListObjectNameAndDownloadUrl is called");
+        LOGGER.info("MinioController | showListObjectNameAndDownloadUrl | bucketName : {}", bucketName);
 
-        LOGGER.info("MinioController | showListObjectNameAndDownloadUrl | bucketName : " + bucketName);
+        String baseUrl = "localhost:" + portNumber + "/minio/download/" + bucketName + "/";
+        LOGGER.info("MinioController | showListObjectNameAndDownloadUrl | baseUrl : {}", baseUrl);
 
-        Map<String, String> map = new HashMap<>();
-        List<String> listObjectNames = minioService.listObjectNames(bucketName);
-
-        LOGGER.info("MinioController | showListObjectNameAndDownloadUrl | listObjectNames size : " + listObjectNames.size());
-
-        String url = "localhost:" + portNumber + "/minio/download/" + bucketName + "/";
-        LOGGER.info("MinioController | showListObjectNameAndDownloadUrl | url : " + url);
-
-        for (int i = 0; i <listObjectNames.size() ; i++) {
-            map.put(listObjectNames.get(i),url+listObjectNames.get(i));
-        }
-
-        LOGGER.info("MinioController | showListObjectNameAndDownloadUrl | map : " + map.toString());
-
-        return map;
+        return minioService.listObjectNames(bucketName).stream()
+                .collect(HashMap::new,
+                        (map, objectName) -> map.put(objectName, baseUrl + objectName),
+                        HashMap::putAll);
     }
+
 
     @GetMapping("/download/{bucketName}/{objectName}")
     @Operation(summary = "Download de objeto", description = "Realiza o download de um objeto específico do bucket")
