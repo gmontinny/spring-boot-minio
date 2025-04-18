@@ -13,6 +13,7 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.context.request.WebRequest;
 import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExceptionHandler;
 
@@ -23,6 +24,9 @@ import java.util.stream.Collectors;
 @Slf4j
 @ControllerAdvice
 public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
+
+
+
 
     @Override
     protected ResponseEntity<Object> handleHttpMediaTypeNotSupported(
@@ -118,19 +122,9 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
     }
 
     @ExceptionHandler(FileResponseException.class)
-    public ResponseEntity<Object> handleFileResponseException(FileResponseException ex) {
-        List<String> details = List.of(ex.getMessage());
-
-        ApiError err = new ApiError(
-                HttpStatus.NOT_FOUND.value(),
-                HttpStatus.NOT_FOUND,
-                LocalDateTime.now(),
-                "Erro no processamento do arquivo",
-                details
-        );
-
-        log.error("Erro no processamento do arquivo: {}", ex.getMessage());
-        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(err);
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public ResponseEntity<String> handleFileResponseException(FileResponseException e) {
+        return new ResponseEntity<>(e.getMessage(), HttpStatus.BAD_REQUEST);
     }
 
     @ExceptionHandler(Exception.class)
