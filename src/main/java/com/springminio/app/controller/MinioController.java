@@ -61,7 +61,6 @@ public class MinioController {
     }
 
 
-
     @PostMapping("/addBucket/{bucketName}")
     @Operation(summary = "Criar novo bucket", description = "Cria um novo bucket no MinIO com o nome especificado")
     @ApiResponses(value = {
@@ -75,7 +74,7 @@ public class MinioController {
         LOGGER.info("MinioController | addBucket | bucketName : " + bucketName);
 
         minioService.makeBucket(bucketName);
-        return "Bucket name "+ bucketName +" created";
+        return "Bucket name " + bucketName + " created";
     }
 
 
@@ -201,9 +200,12 @@ public class MinioController {
 
         LOGGER.info("MinioController | download is called");
         LOGGER.info("MinioController | download | bucketName : {}", bucketName);
-        LOGGER.info("MinioController | download | objectName : {}", objectName);
 
-        try (InputStream in = minioService.downloadObject(bucketName, objectName)) {
+
+        InputStream inputStream = minioService.downloadObject(bucketName, objectName)
+                .orElseThrow(() -> new FileResponseException("Arquivo não encontrado"));
+
+        try (InputStream in = inputStream) {
             response.setHeader("Content-Disposition", "attachment;filename="
                     + URLEncoder.encode(objectName, "UTF-8"));
             response.setCharacterEncoding("UTF-8");
@@ -217,3 +219,4 @@ public class MinioController {
         }
     }
 }
+

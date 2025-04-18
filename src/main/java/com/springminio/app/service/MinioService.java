@@ -6,6 +6,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.InputStream;
 import java.util.List;
+import java.util.Optional;
 
 public interface MinioService {
 
@@ -31,7 +32,7 @@ public interface MinioService {
     FileResponse putObject(MultipartFile multipartFile, String bucketName, String fileType);
 
     // Download file from bucket
-    InputStream downloadObject(String bucketName, String objectName);
+    Optional<InputStream> downloadObject(String bucketName, String objectName);
 
     // Delete file in bucket
     boolean removeObject(String bucketName, String objectName);

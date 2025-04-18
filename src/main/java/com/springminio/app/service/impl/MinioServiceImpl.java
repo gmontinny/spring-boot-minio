@@ -16,6 +16,7 @@ import org.springframework.web.multipart.MultipartFile;
 import java.io.InputStream;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 @Service
@@ -121,7 +122,7 @@ public class MinioServiceImpl implements MinioService {
     }
 
     @Override
-    public InputStream downloadObject(String bucketName, String objectName) {
+    public Optional<InputStream> downloadObject(String bucketName, String objectName) {
         LOGGER.info("MinioServiceImpl | downloadObject is called");
 
         LOGGER.info("MinioServiceImpl | downloadObject | bucketName : " + bucketName);
